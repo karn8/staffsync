@@ -1,0 +1,25 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+venv/
+.env/
+.venv/
+conda-env/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Logs
+logs/
+*.log
+audit.log
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
