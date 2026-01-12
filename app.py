@@ -1000,9 +1000,9 @@ else:
             log_file = f"logs/system_log_{datetime.now().strftime('%Y%m%d')}.log"
             
             if os.path.exists(log_file):
-                with open(log_file, 'r') as f:
+                with open(log_file, "r", encoding="utf-8", errors="replace") as f:
                     log_content = f.readlines()
-                
+
                 st.write(f"**Log File:** {log_file}")
                 st.write(f"**Total Entries:** {len(log_content)}")
                 
