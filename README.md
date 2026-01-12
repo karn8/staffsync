@@ -143,7 +143,7 @@ streamlit run app.py
 
 ---
 
-## 📊 Data
+##  Data
 
 The repository includes a sample dataset (`AED4weeks.csv`) representing four weeks of A&E activity. Users may also upload their own datasets, provided the schema matches the expected format.
 
@@ -160,12 +160,12 @@ Developed as part of academic work in **BMAN73701 - Python Programming for Busin
 
 ---
 
-## 📄 License
+##  License
 
 This project is for academic use.
 
 ---
 
-## 🤝 Contributing
+##  Contributing
 
 This is an academic project. For questions or suggestions, please contact the authors.
