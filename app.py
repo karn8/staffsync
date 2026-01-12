@@ -148,7 +148,7 @@ if not st.session_state.app_started:
         if load_local:
             with st.spinner("Loading local dataset..."):
                 try:
-                    st.session_state.df = pd.read_csv("data\\AED4weeks.csv")
+                    st.session_state.df = pd.read_csv("\\data\\AED4weeks.csv")
                     st.session_state.data_uploaded = True
                     time.sleep(0.3)
                     st.success("Directly loaded AED4weeks.csv from project folder")
