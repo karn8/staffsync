@@ -1,0 +1,242 @@
+/* StaffSync Stylesheet */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* -------------------------------
+   GLOBAL
+--------------------------------*/
+html, body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f4f6f8;
+    color: #1f2933;
+}
+
+#MainMenu, footer, header { 
+    visibility: hidden; 
+}
+
+[data-testid="stAppViewContainer"] {
+    background-color: #f4f6f8;
+}
+
+/* -------------------------------
+   SIDEBAR
+--------------------------------*/
+[data-testid="stSidebar"] {
+    background: #ffffff;
+    border-right: 1px solid #e5e7eb;
+}
+
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3 {
+    font-weight: 600;
+}
+
+[data-testid="stSidebar"] .stRadio > div {
+    gap: 10px;
+}
+
+/* -------------------------------
+   HEADINGS
+--------------------------------*/
+h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #0f172a;
+    margin-bottom: 0.8rem;
+}
+
+h2 {
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+/* -------------------------------
+   CARDS / METRICS
+--------------------------------*/
+div[data-testid="stMetric"] {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+}
+
+div[data-testid="stMetric"] label {
+    color: #64748b;
+    font-size: 0.85rem;
+}
+
+div[data-testid="stMetric"] div {
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+
+/* -------------------------------
+   BUTTONS
+--------------------------------*/
+div.stButton > button {
+    background: linear-gradient(135deg, #0045ac, #0066cc);
+    color: #ffffff !important;
+    border: none;
+    border-radius: 10px;
+    padding: 0.7rem 1.2rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-shadow: 0 6px 14px rgba(0,69,172,0.25);
+}
+
+div.stButton > button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(0,69,172,0.35);
+}
+
+div.stButton > button:active {
+    transform: scale(0.98);
+}
+
+/* Destructive buttons */
+button[kind="primary"][aria-label*="Delete"] {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+}
+
+/* -------------------------------
+   INPUTS
+--------------------------------*/
+input, textarea, select {
+    border-radius: 10px !important;
+    border: 1px solid #e5e7eb !important;
+    padding: 0.6rem !important;
+}
+
+input:focus, textarea:focus, select:focus {
+    border-color: #0045ac !important;
+    box-shadow: 0 0 0 2px rgba(0,69,172,0.15) !important;
+}
+
+/* -------------------------------
+   TABS
+--------------------------------*/
+button[data-baseweb="tab"] {
+    font-weight: 600;
+    color: #475569;
+}
+
+button[data-baseweb="tab"][aria-selected="true"] {
+    color: #0045ac;
+    border-bottom: 3px solid #0045ac;
+}
+
+/* -------------------------------
+   DATAFRAMES
+--------------------------------*/
+[data-testid="stDataFrame"] {
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+}
+
+/* -------------------------------
+   WELCOME CARD
+--------------------------------*/
+.welcome-card {
+    background: linear-gradient(135deg, #0045ac, #1e40af);
+    padding: 70px 60px;
+    border-radius: 20px;
+    color: white;
+    text-align: center;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+    margin: 50px 0;
+}
+
+.welcome-card h1 {
+    color: white;
+    font-size: 3rem;
+}
+
+.welcome-card p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+            
+/* -------------------------------
+   PREDICTION RESULT CARDS
+--------------------------------*/
+.prediction-container {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+    margin-top: 20px;
+}
+
+.prediction-card {
+    min-width: 260px;
+    padding: 28px;
+    border-radius: 18px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 16px 32px rgba(0,0,0,0.08);
+}
+
+.prediction-card.danger {
+    background: #fdecec;
+    border: 1px solid #f5c2c7;
+}
+
+.prediction-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #991b1b;
+    margin-bottom: 12px;
+}
+
+.prediction-value {
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: #7f1d1d;
+}
+
+.input-summary {
+    padding: 8px 0;
+    line-height: 1.8;
+    color: #334155;
+}
+
+/* -------------------------------
+   OPERATION PANEL
+--------------------------------*/
+.operation-panel {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.05);
+    margin-bottom: 24px;
+}
+
+/* -------------------------------
+   LOADING SPINNER
+--------------------------------*/
+.stSpinner > div {
+    border-color: #0045ac !important;
+}
+
+/* -------------------------------
+   EXPANDER
+--------------------------------*/
+[data-testid="stExpander"] {
+    background: #ffffff;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+}

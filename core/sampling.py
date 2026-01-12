@@ -11,21 +11,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
 
-
-# -------------------------------------------------
-# Utility: Load data and draw random sample
-# -------------------------------------------------
-def load_and_sample_data(
-    file_path: str,
-    sample_size: int = 400,
-    random_state: int = 67
-):
-    np.random.seed(67)
-    df = pd.read_csv(file_path)
-    sample = df.sample(n=sample_size, random_state=random_state)
-    return sample
-
-
 # =================================================
 # TASK 4: Random Sample & Descriptive Analysis
 # =================================================
