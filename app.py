@@ -1,0 +1,1195 @@
+from matplotlib import pyplot as plt
+import streamlit as st
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
+from core.scheduling import solve_task1, solve_task2, solve_task3
+from core import sampling
+from plotly.subplots import make_subplots
+import logging
+from datetime import datetime
+import os
+import seaborn as sns
+from joblib import load
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+
+# -------------------------------
+# 1. Logging Setup
+# -------------------------------
+def setup_logging():
+    """Initialize logging system for audit trail"""
+    log_dir = "logs"
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    
+    log_file = os.path.join(log_dir, f"system_log_{datetime.now().strftime('%Y%m%d')}.log")
+    
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler()
+        ]
+    )
+    return logging.getLogger(__name__)
+
+logger = setup_logging()
+
+# -------------------------------
+# 2. Session State Initialization
+# -------------------------------
+def init_session_state():
+    """Initialize session state variables"""
+    if 'app_started' not in st.session_state:
+        st.session_state.app_started = False
+    if 'df' not in st.session_state:
+        st.session_state.df = None
+    if 'data_uploaded' not in st.session_state:
+        st.session_state.data_uploaded = False
+    if 'schedule_results' not in st.session_state:
+        st.session_state.schedule_results = {}
+    if 'sample_data' not in st.session_state:
+        st.session_state.sample_data = None
+    if 'selected_records' not in st.session_state:
+        st.session_state.selected_records = []
+    if 'model' not in st.session_state:
+        st.session_state.model = None
+    if 'model_loaded' not in st.session_state:
+        st.session_state.model_loaded = False
+
+init_session_state()
+
+# -------------------------------
+# 3. Page Configuration
+# -------------------------------
+st.set_page_config(
+    page_title="StaffSync",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* -------------------------------
+   GLOBAL
+--------------------------------*/
+html, body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f4f6f8;
+    color: #1f2933;
+}
+
+#MainMenu, footer, header { visibility: hidden; }
+
+[data-testid="stAppViewContainer"] {
+    background-color: #f4f6f8;
+}
+
+/* -------------------------------
+   SIDEBAR
+--------------------------------*/
+[data-testid="stSidebar"] {
+    background: #ffffff;
+    border-right: 1px solid #e5e7eb;
+}
+
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3 {
+    font-weight: 600;
+}
+
+[data-testid="stSidebar"] .stRadio > div {
+    gap: 10px;
+}
+
+/* -------------------------------
+   HEADINGS
+--------------------------------*/
+h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #0f172a;
+    margin-bottom: 0.8rem;
+}
+
+h2 {
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+/* -------------------------------
+   CARDS / METRICS
+--------------------------------*/
+div[data-testid="stMetric"] {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+}
+
+div[data-testid="stMetric"] label {
+    color: #64748b;
+    font-size: 0.85rem;
+}
+
+div[data-testid="stMetric"] div {
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+
+/* -------------------------------
+   BUTTONS
+--------------------------------*/
+div.stButton > button {
+    background: linear-gradient(135deg, #0045ac, #0066cc);
+    color: #ffffff !important;
+    border: none;
+    border-radius: 10px;
+    padding: 0.7rem 1.2rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-shadow: 0 6px 14px rgba(0,69,172,0.25);
+}
+
+div.stButton > button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(0,69,172,0.35);
+}
+
+div.stButton > button:active {
+    transform: scale(0.98);
+}
+
+/* Destructive buttons */
+button[kind="primary"][aria-label*="Delete"] {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+}
+
+/* -------------------------------
+   INPUTS
+--------------------------------*/
+input, textarea, select {
+    border-radius: 10px !important;
+    border: 1px solid #e5e7eb !important;
+    padding: 0.6rem !important;
+}
+
+input:focus, textarea:focus, select:focus {
+    border-color: #0045ac !important;
+    box-shadow: 0 0 0 2px rgba(0,69,172,0.15) !important;
+}
+
+/* -------------------------------
+   TABS
+--------------------------------*/
+button[data-baseweb="tab"] {
+    font-weight: 600;
+    color: #475569;
+}
+
+button[data-baseweb="tab"][aria-selected="true"] {
+    color: #0045ac;
+    border-bottom: 3px solid #0045ac;
+}
+
+/* -------------------------------
+   DATAFRAMES
+--------------------------------*/
+[data-testid="stDataFrame"] {
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+}
+
+/* -------------------------------
+   WELCOME CARD
+--------------------------------*/
+.welcome-card {
+    background: linear-gradient(135deg, #0045ac, #1e40af);
+    padding: 70px 60px;
+    border-radius: 20px;
+    color: white;
+    text-align: center;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+    margin: 50px 0;
+}
+
+.welcome-card h1 {
+    color: white;
+    font-size: 3rem;
+}
+
+.welcome-card p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+            
+/* -------------------------------
+   PREDICTION RESULT CARDS
+--------------------------------*/
+.prediction-container {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+    margin-top: 20px;
+}
+
+.prediction-card {
+    min-width: 260px;
+    padding: 28px;
+    border-radius: 18px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 16px 32px rgba(0,0,0,0.08);
+}
+
+.prediction-card.danger {
+    background: #fdecec;
+    border: 1px solid #f5c2c7;
+}
+
+.prediction-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #991b1b;
+    margin-bottom: 12px;
+}
+
+.prediction-value {
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: #7f1d1d;
+}
+
+.input-summary {
+    padding: 8px 0;
+    line-height: 1.8;
+    color: #334155;
+}
+
+/* -------------------------------
+   OPERATION PANEL
+--------------------------------*/
+.operation-panel {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.05);
+    margin-bottom: 24px;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# -------------------------------
+# 4. Helper Functions
+# -------------------------------
+def log_action(action, details=""):
+    """Log user actions to audit trail"""
+    logger.info(f"Action: {action} | Details: {details}")
+
+def reset_application():
+    """Reset the application to initial state"""
+    st.session_state.app_started = False
+    st.session_state.df = None
+    st.session_state.data_uploaded = False
+    st.session_state.schedule_results = {}
+    st.session_state.sample_data = None
+    st.session_state.selected_records = []
+    log_action("SYSTEM_RESET", "Application reset to initial state")
+    st.rerun()
+
+# =====================================================
+# WELCOME/HOME SCREEN
+# =====================================================
+if not st.session_state.app_started:
+    st.markdown("""
+        <div class="welcome-card">
+            <h1 style="color: white; font-size: 48px; margin-bottom: 20px;">
+                StaffSync
+            </h1>
+            <p style="font-size: 20px; margin-bottom: 0;">
+                A&E Optimization & Analytics Platform
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("### Get Started")
+    st.write("Upload your A&E dataset to begin analysis and optimization")
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
+    with col2:
+        # 1. The Upload Button/Widget
+        uploaded_file = st.file_uploader(
+            "Upload Dataset (CSV)",
+            type=['csv'],
+            help="Upload your AED4weeks.csv file or similar dataset"
+        )
+        
+        # 2. The Direct Load Button (Placed right under the uploader)
+        load_local = st.button("Or use AED4weeks.csv", use_container_width=True)
+
+        # Logic: If a file is uploaded, process it
+        if uploaded_file is not None:
+            try:
+                st.session_state.df = pd.read_csv(uploaded_file)
+                st.session_state.data_uploaded = True
+                st.success(f"Uploaded file loaded: {uploaded_file.name}")
+                log_action("DATA_UPLOAD", f"File: {uploaded_file.name}")
+            except Exception as e:
+                st.error(f"Error loading uploaded file: {e}")
+
+        # Logic: If the local button is clicked, process the local file
+        if load_local:
+            try:
+                st.session_state.df = pd.read_csv("data\\AED4weeks.csv")
+                st.session_state.data_uploaded = True
+                st.success("Directly loaded AED4weeks.csv from project folder")
+                log_action("LOCAL_DATA_LOAD", "File: AED4weeks.csv")
+            except FileNotFoundError:
+                st.error("File 'AED4weeks.csv' not found in project directory.")
+            except Exception as e:
+                st.error(f"Error: {e}")
+
+        # 3. Preview and Launch (Only visible once data is in state)
+        if st.session_state.get('data_uploaded'):
+            with st.expander("Preview Data"):
+                st.dataframe(st.session_state.df.head(10), use_container_width=True)
+            
+            st.markdown("---")
+            
+            if st.button("Launch Application", use_container_width=True, type="primary"):
+                st.session_state.app_started = True
+                log_action("APP_START", "User launched application")
+                st.rerun()
+
+else:
+    # Application is running
+    df = st.session_state.df
+    
+    # -------------------------------
+    # Sidebar Navigation
+    # -------------------------------
+    with st.sidebar:
+        st.title("A&E Operations")
+        st.markdown("---")
+        page = st.radio(
+            "Navigation Menu",
+            ["Dashboard", "Scheduling", "Clinical Analytics", "Sampling", "Breach Prediction", "Data Management"],
+            key="navigation_radio"
+        )
+        st.markdown("---")
+        
+        # System Controls
+        st.subheader("System Controls")
+        if st.button("Reset Application", use_container_width=True):
+            reset_application()
+        
+        if st.button("Exit Program", use_container_width=True):
+            log_action("APP_EXIT", "User exited application")
+            st.session_state.app_started = False
+            st.rerun()
+        
+        st.markdown("---")
+        st.caption("University of Manchester")
+        st.caption("Operational Research Unit")
+        st.caption(f"Records: {len(df):,}")
+
+    # =====================================================
+    # PAGE 1: DASHBOARD
+    # =====================================================
+    if page == "Dashboard":
+        st.title("A&E Operations Dashboard")
+        log_action("PAGE_VIEW", "Dashboard")
+        
+        m1, m2 = st.columns(2)
+        m3, m4 = st.columns(2)
+        breach_rate = (df['Breachornot'] == 'breach').mean() * 100
+        
+        m1.metric("Total Admissions", f"{len(df):,}")
+        m2.metric("Breach Rate", f"{breach_rate:.2f}%")
+        m3.metric("Staff Count", "6 Operators")
+        m4.metric("Avg Service Time", "14h")
+
+        st.markdown("---")
+
+        st.subheader("Patient Load by HRG Category")
+        hrg_counts = df["HRG"].value_counts().reset_index()
+        hrg_counts.columns = ["HRG", "Count"]
+        
+        fig = px.bar(hrg_counts, x="HRG", y="Count", 
+                     color="Count", color_continuous_scale="Blues",
+                     template="plotly_white")
+        fig.update_layout(height=600, font_family="Inter", showlegend=False)
+        st.plotly_chart(fig, use_container_width=True)
+
+    # =====================================================
+    # PAGE 2: SCHEDULING (Enhanced with Operator View)
+    # =====================================================
+    elif page == "Scheduling":
+        st.title("Operator Schedule Optimization")
+        log_action("PAGE_VIEW", "Scheduling")
+        
+        tab1, tab2, tab3 = st.tabs(["Cost Optimization", "Fairness", "Skill Matching"])
+        
+        with tab1:
+            st.subheader("Task 1: Minimize Labor Cost")
+            if st.button("Run Cost Optimization", key="run_task1"):
+                with st.spinner("Optimizing schedule..."):
+                    res, cost = solve_task1()
+                    st.session_state.schedule_results['task1'] = (res, cost)
+                    log_action("SCHEDULE_OPTIMIZATION", f"Task 1 - Cost: £{cost:,.2f}")
+                    st.rerun()
+            
+            if 'task1' in st.session_state.schedule_results:
+                res, cost = st.session_state.schedule_results['task1']
+                st.metric("Total Labor Cost", f"£{cost:,.2f}")
+                
+                st.markdown("---")
+                st.subheader("Complete Schedule")
+                st.dataframe(res, use_container_width=True, height=400)
+                
+                # Operator-specific schedule view
+                st.markdown("---")
+                st.subheader("View Individual Operator Schedule")
+                
+                # Check if result has index as operators (common format)
+                if res.index.name or not isinstance(res.index, pd.RangeIndex):
+                    # Operators are in the index
+                    operators = sorted(res.index.tolist())
+                    
+                    selected_operator = st.selectbox(
+                        "Select Operator to View Schedule",
+                        options=operators,
+                        key="task1_operator_select"
+                    )
+                    
+                    if selected_operator:
+                        operator_schedule = res.loc[[selected_operator]].copy()
+                        
+                        st.write(f"**Schedule for {selected_operator}**")
+                        st.dataframe(operator_schedule, use_container_width=True, height=150)
+                        
+                        # Create visual representation
+                        days = [col for col in res.columns if col != 'Weekly hours']
+                        if days:
+                            hours_data = operator_schedule[days].values.flatten()
+                            fig_bar = go.Figure(data=[
+                                go.Bar(x=days, y=hours_data, marker_color='#0045ac')
+                            ])
+                            fig_bar.update_layout(
+                                title=f"{selected_operator} - Daily Hours",
+                                xaxis_title="Day",
+                                yaxis_title="Hours",
+                                template="plotly_white",
+                                height=400
+                            )
+                            st.plotly_chart(fig_bar, use_container_width=True)
+                
+                elif 'Operator' in res.columns:
+                    # Traditional format with Operator column
+                    operators = sorted(res['Operator'].unique())
+                    
+                    selected_operator = st.selectbox(
+                        "Select Operator to View Schedule",
+                        options=operators,
+                        key="task1_operator_select"
+                    )
+                    
+                    if selected_operator:
+                        operator_schedule = res[res['Operator'] == selected_operator].copy()
+                        
+                        st.write(f"**Schedule for {selected_operator}**")
+                        st.dataframe(operator_schedule, use_container_width=True, height=300)
+                else:
+                    st.info("Unable to identify operator format in results.")
+        
+        with tab2:
+            st.subheader("Task 2: Workload Fairness")
+            if st.button("Run Fairness Optimization", key="run_task2"):
+                with st.spinner("Optimizing for fairness..."):
+                    res, dev = solve_task2()
+                    st.session_state.schedule_results['task2'] = (res, dev)
+                    log_action("SCHEDULE_OPTIMIZATION", f"Task 2 - Deviation: {dev:.2f}")
+                    st.rerun()
+            
+            if 'task2' in st.session_state.schedule_results:
+                res, dev = st.session_state.schedule_results['task2']
+                st.metric("Workload Deviation", f"{dev:.2f}")
+                
+                st.markdown("---")
+                st.subheader("Complete Schedule")
+                st.dataframe(res, use_container_width=True, height=400)
+                
+                # Operator view
+                st.markdown("---")
+                st.subheader("View Individual Operator Schedule")
+                
+                # Check if result has index as operators
+                if res.index.name or not isinstance(res.index, pd.RangeIndex):
+                    operators = sorted(res.index.tolist())
+                    
+                    selected_operator = st.selectbox(
+                        "Select Operator to View Schedule",
+                        options=operators,
+                        key="task2_operator_select"
+                    )
+                    
+                    if selected_operator:
+                        operator_schedule = res.loc[[selected_operator]].copy()
+                        st.write(f"**Schedule for {selected_operator}**")
+                        st.dataframe(operator_schedule, use_container_width=True, height=150)
+                        
+                        # Create visual representation
+                        days = [col for col in res.columns if col != 'Weekly hours']
+                        if days:
+                            hours_data = operator_schedule[days].values.flatten()
+                            fig_bar = go.Figure(data=[
+                                go.Bar(x=days, y=hours_data, marker_color='#0045ac')
+                            ])
+                            fig_bar.update_layout(
+                                title=f"{selected_operator} - Daily Hours",
+                                xaxis_title="Day",
+                                yaxis_title="Hours",
+                                template="plotly_white",
+                                height=400
+                            )
+                            st.plotly_chart(fig_bar, use_container_width=True)
+                
+                elif 'Operator' in res.columns:
+                    operators = sorted(res['Operator'].unique())
+                    selected_operator = st.selectbox(
+                        "Select Operator to View Schedule",
+                        options=operators,
+                        key="task2_operator_select"
+                    )
+                    
+                    if selected_operator:
+                        operator_schedule = res[res['Operator'] == selected_operator].copy()
+                        st.write(f"**Schedule for {selected_operator}**")
+                        st.dataframe(operator_schedule, use_container_width=True, height=300)
+                else:
+                    st.info("Unable to identify operator format in results.")
+        
+        with tab3:
+            st.subheader("Task 3: Skill-Based Assignment")
+            if st.button("Run Skill Optimization", key="run_task3"):
+                with st.spinner("Optimizing skill matching..."):
+                    res, cost = solve_task3()
+                    st.session_state.schedule_results['task3'] = (res, cost)
+                    log_action("SCHEDULE_OPTIMIZATION", f"Task 3 - Cost: £{cost:,.2f}")
+                    st.rerun()
+            
+            if 'task3' in st.session_state.schedule_results:
+                res, cost = st.session_state.schedule_results['task3']
+                st.metric("Total Cost", f"£{cost:,.2f}")
+                
+                st.markdown("---")
+                st.subheader("Complete Schedule")
+                st.dataframe(res, use_container_width=True, height=400)
+                
+                # Operator view
+                st.markdown("---")
+                st.subheader("View Individual Operator Schedule")
+                
+                # Check if result has index as operators
+                if res.index.name or not isinstance(res.index, pd.RangeIndex):
+                    operators = sorted(res.index.tolist())
+                    
+                    selected_operator = st.selectbox(
+                        "Select Operator to View Schedule",
+                        options=operators,
+                        key="task3_operator_select"
+                    )
+                    
+                    if selected_operator:
+                        operator_schedule = res.loc[[selected_operator]].copy()
+                        st.write(f"**Schedule for {selected_operator}**")
+                        st.dataframe(operator_schedule, use_container_width=True, height=150)
+                        
+                        # Create visual representation
+                        days = [col for col in res.columns if col != 'Weekly hours']
+                        if days:
+                            hours_data = operator_schedule[days].values.flatten()
+                            fig_bar = go.Figure(data=[
+                                go.Bar(x=days, y=hours_data, marker_color='#0045ac')
+                            ])
+                            fig_bar.update_layout(
+                                title=f"{selected_operator} - Daily Hours",
+                                xaxis_title="Day",
+                                yaxis_title="Hours",
+                                template="plotly_white",
+                                height=400
+                            )
+                            st.plotly_chart(fig_bar, use_container_width=True)
+                
+                elif 'Operator' in res.columns:
+                    operators = sorted(res['Operator'].unique())
+                    selected_operator = st.selectbox(
+                        "Select Operator to View Schedule",
+                        options=operators,
+                        key="task3_operator_select"
+                    )
+                    
+                    if selected_operator:
+                        operator_schedule = res[res['Operator'] == selected_operator].copy()
+                        st.write(f"**Schedule for {selected_operator}**")
+                        st.dataframe(operator_schedule, use_container_width=True, height=300)
+                else:
+                    st.info("Unable to identify operator format in results.")
+
+    # =====================================================
+    # PAGE 3: ANALYTICS
+    # =====================================================
+    elif page == "Clinical Analytics":
+        st.title("Clinical Analytics")
+        log_action("PAGE_VIEW", "Analytics")
+        
+        st.subheader("Age Demographics Distribution")
+        
+        fig_age = go.Figure()
+        fig_age.add_trace(go.Histogram(
+            x=df["Age"],
+            nbinsx=30,
+            name='Patient Count',
+            marker=dict(
+                color='#457b9d',
+                line=dict(color='white', width=1.5)
+            ),
+            opacity=0.8
+        ))
+
+        fig_age.update_layout(
+            template="plotly_white",
+            height=700,
+            font_family="Inter",
+            xaxis_title="Age (Years)",
+            yaxis_title="Frequency",
+            bargap=0.05
+        )
+        
+        st.plotly_chart(fig_age, use_container_width=True)
+
+        st.markdown("---")
+
+        st.subheader("Analysis: Length of Stay vs. Unit Congestion")
+        fig_scatter = px.scatter(df, x="noofpatients", y="LoS", 
+                                 color="Breachornot",
+                                 color_discrete_map={"breach": "#e63946", "no_breach": "#a8dadc"},
+                                 template="plotly_white",
+                                 size="LoS",
+                                 size_max=12)
+        fig_scatter.update_layout(height=750, font_family="Inter")
+        st.plotly_chart(fig_scatter, use_container_width=True)
+
+    # =====================================================
+    # PAGE 4: SAMPLING
+    # =====================================================
+    elif page == "Sampling":
+        st.title("Random Sampling & Statistical Inference")
+        log_action("PAGE_VIEW", "Sampling")
+        
+        st.subheader("Sampling Configuration")
+
+        c1, c2, c3 = st.columns([2, 2, 1])
+        with c1:
+            max_sample = min(600, len(df))
+            if max_sample < 100:
+                st.error("Dataset too small for sampling")
+                st.stop()
+            sample_size = st.slider("Sample Size", 100, max_sample, min(400, max_sample), step=50)
+        with c2:
+            random_state = st.number_input("Random Seed", value=67)
+        with c3:
+            st.write("")
+            st.write("")
+            if st.button("Generate Sample", use_container_width=True):
+                st.session_state.sample_data = df.sample(n=sample_size, random_state=int(random_state))
+                log_action("SAMPLING", f"Size: {sample_size}, Seed: {random_state}")
+                st.rerun()
+
+        if st.session_state.sample_data is not None:
+            sample = st.session_state.sample_data
+            st.success(f"Sample generated with {len(sample)} records")
+
+            st.markdown("---")
+
+            st.header("Descriptive Analysis")
+
+            numeric_vars = sample.select_dtypes(include=[np.number]).columns.tolist()
+            categorical_vars = sample.select_dtypes(include=['object']).columns.tolist()
+
+            m1, m2, m3 = st.columns(3)
+            m1.metric("Sample Size", len(sample))
+            m2.metric("Numeric Variables", len(numeric_vars))
+            m3.metric("Categorical Variables", len(categorical_vars))
+
+            st.subheader("Numerical Summary Statistics")
+            st.dataframe(sample[numeric_vars].describe().round(2), use_container_width=True, height=400)
+
+            if len(numeric_vars) > 1:
+                st.subheader("Covariance Matrix")
+                st.dataframe(sample[numeric_vars].cov().round(2), use_container_width=True, height=350)
+
+            corr_matrix = sample[numeric_vars].corr()
+
+            plt.figure(figsize=(8, 6))
+            sns.heatmap(
+                corr_matrix,
+                annot=True,
+                fmt=".2f",
+                cmap="coolwarm",
+                square=True
+            )
+            plt.title("Correlation Matrix Heatmap", fontsize=16)
+            st.pyplot(plt, use_container_width=True) 
+
+            st.markdown("---")
+            st.header("Exploratory Visual Analysis")
+
+            # Numerical Distributions
+            st.subheader("Numerical Variable Distributions")
+            
+            available_numeric = ["Age", "LoS", "noofinvestigation", "nooftreatment", "noofpatients"]
+            numeric_to_plot = [col for col in available_numeric if col in sample.columns]
+
+            if len(numeric_to_plot) > 0:
+                fig_num = make_subplots(
+                    rows=2,
+                    cols=3,
+                    subplot_titles=numeric_to_plot
+                )
+
+                for i, col in enumerate(numeric_to_plot):
+                    fig_num.add_trace(
+                        go.Histogram(
+                            x=sample[col],
+                            nbinsx=30,
+                            marker_color="#457b9d",
+                            opacity=0.85
+                        ),
+                        row=(i // 3) + 1,
+                        col=(i % 3) + 1
+                    )
+
+                fig_num.update_layout(
+                    template="plotly_white",
+                    height=650,
+                    showlegend=False,
+                    font_family="Inter"
+                )
+
+                st.plotly_chart(fig_num, use_container_width=True)
+
+            st.markdown("---")
+
+            # Categorical Distributions
+            st.subheader("Categorical Variable Distributions")
+            
+            available_cat = ["DayofWeek", "Breachornot", "HRG"]
+            cat_to_plot = [col for col in available_cat if col in sample.columns]
+
+            if len(cat_to_plot) > 0:
+                fig_cat = make_subplots(
+                    rows=1,
+                    cols=len(cat_to_plot),
+                    subplot_titles=cat_to_plot
+                )
+
+                for i, col in enumerate(cat_to_plot):
+                    counts = sample[col].value_counts().reset_index()
+                    counts.columns = ["Category", "Count"]
+
+                    fig_cat.add_trace(
+                        go.Bar(
+                            x=counts["Category"],
+                            y=counts["Count"],
+                            marker_color="#a8dadc"
+                        ),
+                        row=1,
+                        col=i + 1
+                    )
+
+                fig_cat.update_layout(
+                    template="plotly_white",
+                    height=450,
+                    showlegend=False,
+                    font_family="Inter"
+                )
+
+                st.plotly_chart(fig_cat, use_container_width=True)
+
+            st.markdown("---")
+
+            # HRG Analysis
+            if "HRG" in sample.columns:
+                st.subheader("HRG Category Distribution")
+                
+                hrg_counts = sample["HRG"].value_counts().reset_index()
+                hrg_counts.columns = ["HRG", "Patient Count"]
+
+                fig_hrg = px.bar(
+                    hrg_counts,
+                    x="HRG",
+                    y="Patient Count",
+                    template="plotly_white",
+                    color="Patient Count",
+                    color_continuous_scale="Blues"
+                )
+
+                fig_hrg.update_layout(
+                    height=500,
+                    font_family="Inter",
+                    showlegend=False,
+                    yaxis_title="Number of Patients"
+                )
+
+                st.plotly_chart(fig_hrg, use_container_width=True)
+
+            st.markdown("---")
+
+            # Time-based Analysis
+            if "Period" in sample.columns:
+                st.subheader("Arrivals Distribution by Time of Day")
+                
+                sample["HourPeriod"] = pd.cut(
+                    sample["Period"],
+                    bins=[0, 6, 12, 18, 24],
+                    labels=["Night", "Morning", "Afternoon", "Evening"],
+                    right=False
+                )
+
+                period_counts = sample["HourPeriod"].value_counts().reset_index()
+                period_counts.columns = ["Hour Period", "Arrivals"]
+
+                fig_pie = px.pie(
+                    period_counts,
+                    names="Hour Period",
+                    values="Arrivals",
+                    hole=0.35,
+                    template="plotly_white"
+                )
+
+                fig_pie.update_layout(
+                    height=450,
+                    font_family="Inter",
+                    title="Arrivals by Hour Period"
+                )
+
+                st.plotly_chart(fig_pie, use_container_width=True)
+
+            st.markdown("---")
+
+            # Length of Stay vs Age
+            if "Age" in sample.columns and "LoS" in sample.columns:
+                st.subheader("Length of Stay vs Age")
+
+                fig_los_age = px.scatter(
+                    sample,
+                    x="Age",
+                    y="LoS",
+                    color="Breachornot" if "Breachornot" in sample.columns else None,
+                    template="plotly_white",
+                    opacity=0.7,
+                    color_discrete_map={
+                        "breach": "#e63946",
+                        "non-breach": "#457b9d"
+                    } if "Breachornot" in sample.columns else None
+                )
+
+                fig_los_age.update_layout(
+                    height=600,
+                    font_family="Inter",
+                    xaxis_title="Age (Years)",
+                    yaxis_title="Length of Stay"
+                )
+
+                st.plotly_chart(fig_los_age, use_container_width=True)
+        else:
+            st.info("Click 'Generate Sample' to begin analysis")
+
+    # =====================================================
+    # PAGE 5: BREACH PREDICTION
+    # =====================================================
+    elif page == "Breach Prediction":
+        st.title("Breach Prediction System")
+        log_action("PAGE_VIEW", "Breach Prediction")
+        
+        # Load model
+        if not st.session_state.model_loaded:
+            try:
+                st.session_state.model = load("xgb_model.pkl")
+                st.session_state.model_loaded = True
+                st.success("Model loaded successfully")
+                log_action("MODEL_LOAD", "XGBoost model loaded")
+            except Exception as e:
+                st.error(f"Error loading model: {str(e)}")
+                st.info("Please ensure 'xgb_model.pkl' is in the working directory")
+                log_action("MODEL_LOAD_ERROR", f"Error: {str(e)}")
+        
+        if st.session_state.model_loaded:
+            st.markdown("---")
+            st.subheader("Enter Patient Information")
+            
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.markdown("**Numerical Features**")
+                age = st.number_input("Age", min_value=0, max_value=120, value=45, step=1)
+                period = st.number_input("Period (Hour of Day)", min_value=0, max_value=23, value=12, step=1)
+                noofinvestigation = st.number_input("Number of Investigations", min_value=0, max_value=20, value=2, step=1)
+            
+            with col2:
+                st.markdown("**Numerical Features (cont.)**")
+                nooftreatment = st.number_input("Number of Treatments", min_value=0, max_value=20, value=1, step=1)
+                noofpatients = st.number_input("Number of Patients in Unit", min_value=0, max_value=100, value=25, step=1)
+            
+            with col3:
+                st.markdown("**Categorical Features**")
+                dayofweek = st.selectbox("Day of Week", ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])
+                hrg = st.selectbox("HRG Category", ["Minor", "Major", "Resuscitation"])
+                day = st.number_input("Day of Month", min_value=1, max_value=31, value=15, step=1)
+
+            # Predict button
+            col_center = st.columns([1, 1, 1])[1]
+            with col_center:
+                if st.button("Predict Breach", use_container_width=True, type="primary"):
+                    try:
+                        # Create input dataframe with ONLY the features used in training
+                        # Match exactly what the model was trained on
+                        input_data = pd.DataFrame({
+                            "Age": [age],
+                            "Period": [period],
+                            "noofinvestigation": [noofinvestigation],
+                            "nooftreatment": [nooftreatment],
+                            "noofpatients": [noofpatients],
+                            "DayofWeek": [dayofweek],
+                            "HRG": [hrg],
+                            "Day": [day]
+                        })
+                        
+                        # The model is a Pipeline with preprocessing built-in
+                        # Just pass the dataframe directly
+                        prediction_proba = st.session_state.model.predict_proba(input_data)[0]
+                        prediction = st.session_state.model.predict(input_data)[0]
+                        
+                        log_action("BREACH_PREDICTION", f"Prediction: {prediction}, Probability: {prediction_proba}")
+
+                        st.subheader("Prediction Results")
+
+                        st.markdown(f"""
+                        <div class="prediction-container">
+                            <div class="prediction-card danger">
+                                <div class="prediction-title">Chance of Breach</div>
+                                <div class="prediction-value">
+                                    {prediction_proba[1]*100:.1f}%
+                                </div>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                        # Probability visualization
+                        st.markdown("---")
+                        fig_prob = go.Figure(data=[
+                            go.Bar(
+                                x=['No Breach', 'Breach'],
+                                y=[prediction_proba[0], prediction_proba[1]],
+                                marker_color=['#a8dadc', '#e63946'],
+                                text=[f"{prediction_proba[0]*100:.1f}%", f"{prediction_proba[1]*100:.1f}%"],
+                                textposition='auto'
+                            )
+                        ])
+                        fig_prob.update_layout(
+                            title="Prediction Probabilities",
+                            yaxis_title="Probability",
+                            template="plotly_white",
+                            height=400,
+                            font_family="Inter"
+                        )
+                        st.plotly_chart(fig_prob, use_container_width=True)
+                        
+                    except Exception as e:
+                        st.error(f"Prediction error: {str(e)}")
+                        log_action("PREDICTION_ERROR", f"Error: {str(e)}")
+                        st.info("Please ensure all input features match the model's training data")
+
+    # =====================================================
+    # PAGE 6: DATA MANAGEMENT (Enhanced)
+    # =====================================================
+    elif page == "Data Management":
+        st.title("Advanced Data Management")
+        log_action("PAGE_VIEW", "Data Management")
+        
+        tab1, tab2, tab3 = st.tabs(["Search & Filter", "Range Operations", "Audit Log"])
+        
+        with tab1:
+            st.subheader("Search and Filter Records")
+            search = st.text_input("Filter by Patient ID")
+            filtered = df if not search else df[df["ID"].str.contains(search, case=False, na=False)]
+            
+            st.write(f"Showing {len(filtered)} of {len(df)} records")
+            st.dataframe(filtered, use_container_width=True, height=500)
+        
+        with tab2:
+            st.subheader("Range-Based Data Operations")
+            
+            # Operation Panel at the top
+            st.markdown("#### Step 1: Define Range Filter")
+            
+            # Select variable
+            numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+            selected_var = st.selectbox("Select Variable", numeric_cols)
+            
+            if selected_var:
+                col1, col2 = st.columns(2)
+                with col1:
+                    min_val = st.number_input(
+                        "Minimum Value",
+                        value=float(df[selected_var].min()),
+                        step=1.0
+                    )
+                with col2:
+                    max_val = st.number_input(
+                        "Maximum Value",
+                        value=float(df[selected_var].max()),
+                        step=1.0
+                    )
+                
+                # Filter data in range
+                range_filtered = df[
+                    (df[selected_var] >= min_val) & 
+                    (df[selected_var] <= max_val)
+                ]
+                
+                st.info(f"**Found {len(range_filtered)} records where {selected_var} is between {min_val} and {max_val}**")
+                
+                st.markdown("---")
+
+                st.markdown("#### Preview: Records in Range")
+                st.dataframe(range_filtered, use_container_width=True, height=300)
+
+                st.markdown("---")
+
+                st.markdown("#### Step 2: Select Records to Modify")
+                st.caption("👇 Scroll down to view and select records from the filtered results below")
+                
+                # Show filtered records with checkboxes
+                if len(range_filtered) > 0:
+                    # Select all option
+                    select_all = st.checkbox("Select All Records", value=False)
+                    
+                    if select_all:
+                        st.session_state.selected_records = range_filtered.index.tolist()
+                    else:
+                        st.session_state.selected_records = []
+                    
+                    # Individual selection
+                    st.write("**Or select individual records:**")
+                    selected_indices = st.multiselect(
+                        "Choose records by ID",
+                        options=range_filtered.index.tolist(),
+                        format_func=lambda x: f"ID: {df.loc[x, 'ID']} | {selected_var}: {df.loc[x, selected_var]}",
+                        default=st.session_state.selected_records if not select_all else range_filtered.index.tolist()
+                    )
+                    
+                    if not select_all:
+                        st.session_state.selected_records = selected_indices
+                    
+                    st.write(f"**Selected: {len(st.session_state.selected_records)} records**")
+                    
+                    st.markdown("---")
+                    st.markdown("#### Step 3: Perform Operations")
+                    
+                    op_col1, op_col2 = st.columns(2)
+                    
+                    with op_col1:
+                        st.markdown("**Delete Records**")
+                        if st.button("Delete Selected Records", use_container_width=True, type="primary"):
+                            if len(st.session_state.selected_records) > 0:
+                                num_deleted = len(st.session_state.selected_records)
+                                st.session_state.df = df.drop(st.session_state.selected_records)
+                                log_action(
+                                    "DATA_DELETE",
+                                    f"Deleted {num_deleted} records where {selected_var} ∈ [{min_val}, {max_val}]"
+                                )
+                                st.success(f"Deleted {num_deleted} records")
+                                st.session_state.selected_records = []
+                                st.rerun()
+                            else:
+                                st.warning("No records selected")
+                    
+                    with op_col2:
+                        st.markdown("**Modify Values**")
+                        new_value = st.number_input("New Value for Selected Variable", step=1.0, key="new_val")
+                        if st.button("Update Selected Records", use_container_width=True):
+                            if len(st.session_state.selected_records) > 0:
+                                num_updated = len(st.session_state.selected_records)
+                                old_values = st.session_state.df.loc[st.session_state.selected_records, selected_var].tolist()
+                                st.session_state.df.loc[st.session_state.selected_records, selected_var] = new_value
+                                log_action(
+                                    "DATA_MODIFY",
+                                    f"Updated {num_updated} records: {selected_var} changed from {old_values[:3]}{'...' if len(old_values) > 3 else ''} to {new_value}"
+                                )
+                                st.success(f"Updated {num_updated} records")
+                                st.session_state.selected_records = []
+                                st.rerun()
+                            else:
+                                st.warning("No records selected")
+                    
+                    st.markdown("---")
+                    
+                    if st.button("Clear Selection", use_container_width=False):
+                        st.session_state.selected_records = []
+                        st.rerun()
+                
+                st.markdown('</div>', unsafe_allow_html=True)
+                
+                st.markdown("---")
+        
+        with tab3:
+            st.subheader("System Audit Log")
+            
+            log_file = f"logs/system_log_{datetime.now().strftime('%Y%m%d')}.log"
+            
+            if os.path.exists(log_file):
+                with open(log_file, 'r') as f:
+                    log_content = f.readlines()
+                
+                st.write(f"**Log File:** {log_file}")
+                st.write(f"**Total Entries:** {len(log_content)}")
+                
+                # Display recent logs
+                st.text_area(
+                    "Recent Activity",
+                    value="".join(log_content[-50:]),
+                    height=500
+                )
+                
+                # Download log
+                if st.download_button(
+                    "Download Full Log",
+                    data="".join(log_content),
+                    file_name=f"audit_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                    mime="text/plain"
+                ):
+                    log_action("LOG_DOWNLOAD", "User downloaded audit log")
+            else:
+                st.info("No log file found for today")
