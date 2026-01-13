@@ -1,130 +1,162 @@
-/* StaffSync Stylesheet */
+/* =================================================
+   StaffSync — UI
+   ================================================= */
 
+/* -------------------------------
+   FONTS
+--------------------------------*/
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 /* -------------------------------
-   GLOBAL
+   GLOBAL RESET
 --------------------------------*/
 html, body {
     font-family: 'Inter', sans-serif;
-    background-color: #f4f6f8;
-    color: #1f2933;
+    color: #e5e7eb;
+    background: linear-gradient(135deg, #020617, #0f172a);
 }
 
-#MainMenu, footer, header { 
-    visibility: hidden; 
+#MainMenu, footer, header {
+    visibility: hidden;
 }
 
+/* Main app background */
 [data-testid="stAppViewContainer"] {
-    background-color: #f4f6f8;
+    background:
+        radial-gradient(circle at top left, rgba(106,61,232,0.28), transparent 45%),
+        radial-gradient(circle at bottom right, rgba(0,69,172,0.28), transparent 45%),
+        linear-gradient(180deg, #020617, #020617);
 }
 
 /* -------------------------------
-   SIDEBAR
+   SIDEBAR (GLASS)
 --------------------------------*/
 [data-testid="stSidebar"] {
-    background: #ffffff;
-    border-right: 1px solid #e5e7eb;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-right: 1px solid rgba(255,255,255,0.1);
 }
 
-[data-testid="collapsedControl"] { 
-    display: none; 
+[data-testid="collapsedControl"] {
+    display: none;
 }
 
-[data-testid="stSidebar"] h1,
-[data-testid="stSidebar"] h2,
-[data-testid="stSidebar"] h3 {
-    font-weight: 600;
-}
-
-[data-testid="stSidebar"] .stRadio > div {
-    gap: 10px;
+[data-testid="stSidebar"] * {
+    color: #e5e7eb;
+    font-weight: 500;
 }
 
 /* -------------------------------
    HEADINGS
 --------------------------------*/
 h1 {
-    font-size: 2.2rem;
+    font-size: 2.4rem;
     font-weight: 700;
-    letter-spacing: -0.5px;
-    color: #0f172a;
-    margin-bottom: 0.8rem;
+    letter-spacing: -0.6px;
+    color: #f8fafc;
+    text-shadow: 0 6px 22px rgba(106,61,232,0.5);
 }
 
 h2 {
     font-size: 1.6rem;
     font-weight: 600;
-    color: #1e293b;
+    color: #e5e7eb;
 }
 
 h3 {
     font-size: 1.2rem;
     font-weight: 600;
-    color: #334155;
+    color: #cbd5f5;
 }
 
 /* -------------------------------
-   CARDS / METRICS
+   GLASS CARDS / METRICS
 --------------------------------*/
-div[data-testid="stMetric"] {
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 24px;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+div[data-testid="stMetric"],
+.operation-panel,
+.prediction-card,
+[data-testid="stExpander"] {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 18px;
+    padding: 26px;
+    border: 1px solid rgba(255,255,255,0.14);
+    box-shadow:
+        0 25px 45px rgba(0,0,0,0.45),
+        inset 0 1px 0 rgba(255,255,255,0.1);
 }
 
+/* Metric text */
 div[data-testid="stMetric"] label {
-    color: #64748b;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
+    color: #94a3b8;
 }
 
 div[data-testid="stMetric"] div {
-    font-size: 1.6rem;
+    font-size: 1.7rem;
     font-weight: 700;
+    color: #f8fafc;
 }
 
 /* -------------------------------
-   BUTTONS
+   BUTTONS (GRADIENT GLASS)
 --------------------------------*/
 div.stButton > button {
-    background: linear-gradient(135deg, #0045ac, #0066cc);
-    color: #ffffff !important;
-    border: none;
-    border-radius: 10px;
-    padding: 0.7rem 1.2rem;
+    background: linear-gradient(
+        135deg,
+        rgba(106,61,232,0.95),
+        rgba(0,69,172,0.95)
+    );
+    color: white !important;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.25);
+    padding: 0.8rem 1.5rem;
     font-weight: 600;
-    transition: all 0.2s ease;
-    box-shadow: 0 6px 14px rgba(0,69,172,0.25);
+    backdrop-filter: blur(8px);
+    box-shadow:
+        0 14px 36px rgba(106,61,232,0.55),
+        inset 0 1px 0 rgba(255,255,255,0.35);
+    transition: all 0.25s ease;
 }
 
 div.stButton > button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 10px 20px rgba(0,69,172,0.35);
+    transform: translateY(-2px);
+    box-shadow:
+        0 20px 48px rgba(106,61,232,0.75),
+        inset 0 1px 0 rgba(255,255,255,0.4);
 }
 
 div.stButton > button:active {
-    transform: scale(0.98);
+    transform: scale(0.97);
 }
 
-/* Destructive buttons */
+/* Destructive */
 button[kind="primary"][aria-label*="Delete"] {
-    background: linear-gradient(135deg, #dc2626, #ef4444);
+    background: linear-gradient(135deg, #dc2626, #991b1b);
 }
 
 /* -------------------------------
-   INPUTS
+   INPUTS (GLASS)
 --------------------------------*/
 input, textarea, select {
-    border-radius: 10px !important;
-    border: 1px solid #e5e7eb !important;
-    padding: 0.6rem !important;
+    background: rgba(255,255,255,0.08) !important;
+    backdrop-filter: blur(12px);
+    color: #f8fafc !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(255,255,255,0.18) !important;
+    padding: 0.65rem !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #94a3b8;
 }
 
 input:focus, textarea:focus, select:focus {
-    border-color: #0045ac !important;
-    box-shadow: 0 0 0 2px rgba(0,69,172,0.15) !important;
+    border-color: #6a3de8 !important;
+    box-shadow: 0 0 0 2px rgba(106,61,232,0.35) !important;
 }
 
 /* -------------------------------
@@ -132,115 +164,99 @@ input:focus, textarea:focus, select:focus {
 --------------------------------*/
 button[data-baseweb="tab"] {
     font-weight: 600;
-    color: #475569;
+    color: #94a3b8;
 }
 
 button[data-baseweb="tab"][aria-selected="true"] {
-    color: #0045ac;
-    border-bottom: 3px solid #0045ac;
+    color: #ffffff;
+    border-bottom: 3px solid #6a3de8;
 }
 
 /* -------------------------------
    DATAFRAMES
 --------------------------------*/
 [data-testid="stDataFrame"] {
-    border-radius: 12px;
-    border: 1px solid #e5e7eb;
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.12);
     overflow: hidden;
 }
 
 /* -------------------------------
-   WELCOME CARD
+   WELCOME HERO
 --------------------------------*/
 .welcome-card {
-    background: linear-gradient(135deg, #0045ac, #1e40af);
-    padding: 70px 60px;
-    border-radius: 20px;
-    color: white;
+    background: linear-gradient(
+        135deg,
+        rgba(106,61,232,0.35),
+        rgba(0,69,172,0.35)
+    );
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 80px 60px;
+    border-radius: 30px;
     text-align: center;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.25);
-    margin: 50px 0;
+    box-shadow:
+        0 50px 100px rgba(0,0,0,0.6),
+        inset 0 1px 0 rgba(255,255,255,0.35);
+    margin: 60px 0;
 }
 
 .welcome-card h1 {
-    color: white;
-    font-size: 3rem;
+    font-size: 3.2rem;
 }
 
 .welcome-card p {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     opacity: 0.9;
 }
-            
+
 /* -------------------------------
-   PREDICTION RESULT CARDS
+   PREDICTION / ALERT
 --------------------------------*/
 .prediction-container {
     display: flex;
     gap: 32px;
-    align-items: flex-start;
-    margin-top: 20px;
-}
-
-.prediction-card {
-    min-width: 260px;
-    padding: 28px;
-    border-radius: 18px;
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 16px 32px rgba(0,0,0,0.08);
-}
-
-.prediction-card.danger {
-    background: #fdecec;
-    border: 1px solid #f5c2c7;
+    margin-top: 24px;
 }
 
 .prediction-title {
-    font-size: 0.85rem;
-    font-weight: 600;
+    font-size: 0.75rem;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #991b1b;
+    letter-spacing: 0.12em;
+    color: #fca5a5;
     margin-bottom: 12px;
 }
 
 .prediction-value {
-    font-size: 2.4rem;
+    font-size: 2.6rem;
     font-weight: 700;
-    color: #7f1d1d;
+    color: #fee2e2;
 }
 
-.input-summary {
-    padding: 8px 0;
-    line-height: 1.8;
-    color: #334155;
-}
-
-/* -------------------------------
-   OPERATION PANEL
---------------------------------*/
-.operation-panel {
-    background: #ffffff;
-    border-radius: 16px;
-    padding: 24px;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 12px 24px rgba(0,0,0,0.05);
-    margin-bottom: 24px;
+.prediction-card.danger {
+    background: linear-gradient(
+        135deg,
+        rgba(220,38,38,0.4),
+        rgba(127,29,29,0.4)
+    );
+    border: 1px solid rgba(248,113,113,0.45);
 }
 
 /* -------------------------------
    LOADING SPINNER
 --------------------------------*/
 .stSpinner > div {
-    border-color: #0045ac !important;
+    border-color: #6a3de8 !important;
 }
 
 /* -------------------------------
-   EXPANDER
+   SMOOTH UI
 --------------------------------*/
-[data-testid="stExpander"] {
-    background: #ffffff;
-    border-radius: 10px;
-    border: 1px solid #e5e7eb;
+* {
+    transition:
+        background 0.3s ease,
+        box-shadow 0.3s ease,
+        transform 0.25s ease;
 }
