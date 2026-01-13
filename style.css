@@ -37,6 +37,10 @@ html, body {
     gap: 10px;
 }
 
+[data-testid="collapsedControl"] { 
+    display: none; 
+}
+
 /* -------------------------------
    HEADINGS
 --------------------------------*/
