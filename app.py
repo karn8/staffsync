@@ -610,10 +610,6 @@ else:
                 st.subheader("Numerical Summary Statistics")
                 st.dataframe(sample[numeric_vars].describe().round(2), use_container_width=True, height=400)
 
-                if len(numeric_vars) > 1:
-                    st.subheader("Covariance Matrix")
-                    st.dataframe(sample[numeric_vars].cov().round(2), use_container_width=True, height=350)
-
             with st.spinner("Generating correlation heatmap..."):
                 time.sleep(0.3)
                 corr_df = sample.copy()
