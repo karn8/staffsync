@@ -566,9 +566,6 @@ else:
                 m2.metric("Numeric Variables", len(numeric_vars))
                 m3.metric("Categorical Variables", len(categorical_vars))
 
-                st.subheader("Numerical Summary Statistics")
-                st.dataframe(sample[numeric_vars].describe().round(2), use_container_width=True, height=400)
-
                 # -------------------------------------------------
                 # Breach statistics
                 # -------------------------------------------------
@@ -582,6 +579,9 @@ else:
                     b1, b2 = st.columns(2)
                     b1.metric("No. of Breaches", f"{breach_count:,}")
                     b2.metric("Breach Percentage", f"{breach_percent:.2f}%")
+
+                st.subheader("Numerical Summary Statistics")
+                st.dataframe(sample[numeric_vars].describe().round(2), use_container_width=True, height=400)
 
                 if len(numeric_vars) > 1:
                     st.subheader("Covariance Matrix")
