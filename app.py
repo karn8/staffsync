@@ -616,16 +616,24 @@ else:
 
             with st.spinner("Generating correlation heatmap..."):
                 time.sleep(0.3)
-                corr_matrix = sample[numeric_vars].corr()
-                plt.figure(figsize=(8, 6))
+                corr_df = sample.copy()
+                
+                if "Breachornot" in corr_df.columns:
+                    corr_df['is_breach'] = corr_df['Breachornot'].apply(lambda x: 1 if x == "breach" else 0)
+                
+                numeric_cols_for_corr = corr_df.select_dtypes(include=[np.number]).columns.tolist()
+                corr_matrix = corr_df[numeric_cols_for_corr].corr()
+                
+                plt.figure(figsize=(10, 8))
                 sns.heatmap(
                     corr_matrix,
                     annot=True,
                     fmt=".2f",
                     cmap="coolwarm",
-                    square=True
+                    square=True,
+                    linewidths=0.5
                 )
-                plt.title("Correlation Matrix Heatmap", fontsize=16)
+                plt.title("Correlation Matrix (Including Breach)", fontsize=16)
                 st.pyplot(plt, use_container_width=True)
 
             st.markdown("---")
