@@ -711,7 +711,7 @@ else:
 
             if "Breachornot" in sample.columns:
 
-                st.subheader("Numerical Factors")
+                st.subheader("Numerical Factors (mean)")
 
                 numeric_factors = [
                     col for col in ["LoS", "noofpatients", "noofinvestigation", "nooftreatment", "Age"]
@@ -725,10 +725,6 @@ else:
                     .T
                     .round(2)
                 )
-
-                num_summary["Difference (Breach − Non-breach)"] = (
-                    num_summary.get("breach", 0) - num_summary.get("no_breach", 0)
-                ).round(2)
 
                 st.dataframe(num_summary, use_container_width=True)
 
@@ -763,7 +759,7 @@ else:
                 st.subheader("Categorical Factors")
 
                 categorical_factors = [
-                    col for col in ["DayofWeek", "HRG", "Period"]
+                    col for col in [ "HRG", "Period"]
                     if col in sample.columns
                 ]
 
