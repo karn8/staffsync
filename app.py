@@ -711,7 +711,7 @@ else:
 
             if "Breachornot" in sample.columns:
 
-                st.subheader("Numerical Factors (mean)")
+                st.subheader("Numerical Factors")
 
                 numeric_factors = [
                     col for col in ["LoS", "noofpatients", "noofinvestigation", "nooftreatment", "Age"]
@@ -725,6 +725,10 @@ else:
                     .T
                     .round(2)
                 )
+
+                num_summary["Difference (Breach - Non-breach)"] = (
+                    num_summary.get("breach", 0) - num_summary.get("no_breach", 0)
+                ).round(2)
 
                 st.dataframe(num_summary, use_container_width=True)
 
@@ -759,7 +763,7 @@ else:
                 st.subheader("Categorical Factors")
 
                 categorical_factors = [
-                    col for col in [ "HRG", "Period"]
+                    col for col in ["HRG", "Period"]
                     if col in sample.columns
                 ]
 
@@ -797,7 +801,7 @@ else:
 
                 st.subheader("Key Observations")
 
-                top_numeric = num_summary["Difference (Breach - Non-breach)"].abs().sort_values(ascending=False)
+                top_numeric = num_summary["Difference (Breach − Non-breach)"].abs().sort_values(ascending=False)
 
                 st.markdown("**Numerical variables most associated with breaches:**")
                 for var in top_numeric.head(3).index:
@@ -807,6 +811,8 @@ else:
                     "Higher values of these variables are consistently observed in breach cases, "
                     "suggesting increased workload and patient complexity as primary drivers."
                 )
+
+
 
             st.markdown("---")
 
