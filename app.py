@@ -711,7 +711,7 @@ else:
 
             if "Breachornot" in sample.columns:
 
-                st.subheader("Numerical Factors")
+                st.subheader("Numerical Factors (mean)")
 
                 numeric_factors = [
                     col for col in ["LoS", "noofpatients", "noofinvestigation", "nooftreatment", "Age"]
@@ -725,6 +725,8 @@ else:
                     .T
                     .round(2)
                 )
+
+                st.subheader(num_summary)
 
                 num_summary["Difference (Breach - Non-breach)"] = (
                     num_summary.get("breach", 0) - num_summary.get("no_breach", 0)
