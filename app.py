@@ -812,11 +812,16 @@ else:
 
                 st.subheader("Key Observations")
 
-                top_numeric = num_summary["Difference (Breach - Non-breach)"].abs().sort_values(ascending=False)
+                top_numeric = (
+                    num_summary["% Difference (vs Non-breach)"]
+                    .abs()
+                    .sort_values(ascending=False)
+                )
 
                 st.markdown("**Numerical variables most associated with breaches:**")
                 for var in top_numeric.head(3).index:
                     st.write(f"• {var}")
+
 
                 st.markdown(
                     "These variables show a bigger gap between mean values of breach vs non-breach cases, "
