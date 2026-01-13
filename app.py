@@ -555,6 +555,21 @@ else:
             st.markdown("---")
 
             st.header("Descriptive Analysis")
+
+            # -------------------------------------------------
+            # Breach statistics
+            # -------------------------------------------------
+            st.subheader("Breach Summary (Sample)")
+
+            if "Breachornot" in sample.columns:
+                total_cases = len(sample)
+                breach_count = (sample["Breachornot"] == "breach").sum()
+                breach_percent = (breach_count / total_cases) * 100
+
+                b1, b2 = st.columns(2)
+                b1.metric("No. of Breaches", f"{breach_count:,}")
+                b2.metric("Breach Percentage", f"{breach_percent:.2f}%")
+
             
             with st.spinner("Computing statistics..."):
                 time.sleep(0.2)
