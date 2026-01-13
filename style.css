@@ -27,6 +27,10 @@ html, body {
     border-right: 1px solid #e5e7eb;
 }
 
+[data-testid="collapsedControl"] { 
+    display: none; 
+}
+
 [data-testid="stSidebar"] h1,
 [data-testid="stSidebar"] h2,
 [data-testid="stSidebar"] h3 {
@@ -35,10 +39,6 @@ html, body {
 
 [data-testid="stSidebar"] .stRadio > div {
     gap: 10px;
-}
-
-[data-testid="collapsedControl"] { 
-    display: none; 
 }
 
 /* -------------------------------
