@@ -797,7 +797,7 @@ else:
 
                 st.subheader("Key Observations")
 
-                top_numeric = num_summary["Difference (Breach − Non-breach)"].abs().sort_values(ascending=False)
+                top_numeric = num_summary["Difference (Breach - Non-breach)"].abs().sort_values(ascending=False)
 
                 st.markdown("**Numerical variables most associated with breaches:**")
                 for var in top_numeric.head(3).index:
