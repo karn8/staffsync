@@ -478,6 +478,33 @@ else:
     elif page == "Clinical Analytics":
         st.title("Clinical Analytics")
         log_action("PAGE_VIEW", "Analytics")
+
+        # =====================================================
+        # DESCRIPTIVE ANALYSIS — CLINICAL DATA
+        # =====================================================
+        st.subheader("Descriptive Analysis")
+
+        numeric_vars = df.select_dtypes(include=[np.number]).columns.tolist()
+        categorical_vars = df.select_dtypes(include=['object']).columns.tolist()
+
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Size", f"{len(df):,}")
+        c2.metric("Numeric Variables", len(numeric_vars))
+        c3.metric("Categorical Variables", len(categorical_vars))
+
+        # -------------------------------------------------
+        # Breach Summary
+        # -------------------------------------------------
+        if "Breachornot" in df.columns:
+            breach_count = (df["Breachornot"] == "breach").sum()
+            breach_percent = (breach_count / len(df)) * 100
+
+            st.subheader("Breach Summary")
+
+            b1, b2 = st.columns(2)
+            b1.metric("No. of Breaches", f"{breach_count:,}")
+            b2.metric("Breach Percentage", f"{breach_percent:.2f}%")
+
         
         st.subheader("Age Demographics Distribution")
         
