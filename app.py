@@ -726,10 +726,8 @@ else:
                     .round(2)
                 )
 
-                st.subheader(num_summary)
-
                 num_summary["Difference (Breach - Non-breach)"] = (
-                    num_summary.get("breach", 0) - num_summary.get("no_breach", 0)
+                    num_summary["breach"] - num_summary["non-breach"]
                 ).round(2)
 
                 st.dataframe(num_summary, use_container_width=True)
@@ -803,7 +801,7 @@ else:
 
                 st.subheader("Key Observations")
 
-                top_numeric = num_summary["Difference (Breach − Non-breach)"].abs().sort_values(ascending=False)
+                top_numeric = num_summary["Difference (Breach - Non-breach)"].abs().sort_values(ascending=False)
 
                 st.markdown("**Numerical variables most associated with breaches:**")
                 for var in top_numeric.head(3).index:
