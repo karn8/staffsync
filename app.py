@@ -726,11 +726,22 @@ else:
                     .round(2)
                 )
 
-                num_summary["Difference (Breach - Non-breach)"] = (
-                    num_summary["breach"] - num_summary["non-breach"]
+                num_summary["% Difference (vs Non-breach)"] = np.where(
+                    num_summary["non-breach"] != 0,
+                    (num_summary["breach"] - num_summary["non-breach"])
+                    / num_summary["non-breach"] * 100,
+                    np.nan
                 ).round(2)
 
-                st.dataframe(num_summary, use_container_width=True)
+                st.dataframe(
+                    num_summary.style.format({
+                        "breach": "{:.2f}",
+                        "non-breach": "{:.2f}",
+                        "% Difference (vs Non-breach)": "{:+.1f}%"
+                    }),
+                    use_container_width=True
+                )
+
 
                 st.subheader("Distribution Comparison")
 
@@ -808,10 +819,9 @@ else:
                     st.write(f"• {var}")
 
                 st.markdown(
-                    "Higher values of these variables are consistently observed in breach cases, "
+                    "These variables show a bigger gap between mean values of breach vs non-breach cases, "
                     "suggesting increased workload and patient complexity as primary drivers."
                 )
-
 
 
             st.markdown("---")
