@@ -706,6 +706,113 @@ else:
                     st.plotly_chart(fig_cat, use_container_width=True)
 
             st.markdown("---")
+            st.header("Factors Contributing to Breach")
+            st.caption("Exploratory comparison between breach and non-breach cases within the sample")
+
+            if "Breachornot" in sample.columns:
+
+                st.subheader("Numerical Factors")
+
+                numeric_factors = [
+                    col for col in ["LoS", "noofpatients", "noofinvestigation", "nooftreatment", "Age"]
+                    if col in sample.columns
+                ]
+
+                num_summary = (
+                    sample
+                    .groupby("Breachornot")[numeric_factors]
+                    .mean()
+                    .T
+                    .round(2)
+                )
+
+                num_summary["Difference (Breach − Non-breach)"] = (
+                    num_summary.get("breach", 0) - num_summary.get("no_breach", 0)
+                ).round(2)
+
+                st.dataframe(num_summary, use_container_width=True)
+
+                st.subheader("Distribution Comparison")
+
+                selected_var = st.selectbox(
+                    "Select Variable to Compare",
+                    options=numeric_factors
+                )
+
+                fig_compare = px.box(
+                    sample,
+                    x="Breachornot",
+                    y=selected_var,
+                    color="Breachornot",
+                    template="plotly_white",
+                    color_discrete_map={
+                        "breach": "#e63946",
+                        "no_breach": "#457b9d"
+                    }
+                )
+
+                fig_compare.update_layout(
+                    height=500,
+                    font_family="Inter",
+                    xaxis_title="Outcome",
+                    yaxis_title=selected_var
+                )
+
+                st.plotly_chart(fig_compare, use_container_width=True)
+
+                st.subheader("Categorical Factors")
+
+                categorical_factors = [
+                    col for col in ["DayofWeek", "HRG", "Period"]
+                    if col in sample.columns
+                ]
+
+                selected_cat = st.selectbox(
+                    "Select Categorical Variable",
+                    options=categorical_factors
+                )
+
+                breach_rate_cat = (
+                    sample
+                    .assign(breach_flag=lambda x: x["Breachornot"] == "breach")
+                    .groupby(selected_cat)["breach_flag"]
+                    .mean()
+                    .reset_index()
+                )
+
+                breach_rate_cat["Breach Rate (%)"] = (breach_rate_cat["breach_flag"] * 100).round(2)
+
+                fig_cat_breach = px.bar(
+                    breach_rate_cat,
+                    x=selected_cat,
+                    y="Breach Rate (%)",
+                    template="plotly_white",
+                    color="Breach Rate (%)",
+                    color_continuous_scale="Reds"
+                )
+
+                fig_cat_breach.update_layout(
+                    height=500,
+                    font_family="Inter",
+                    yaxis_title="Breach Rate (%)"
+                )
+
+                st.plotly_chart(fig_cat_breach, use_container_width=True)
+
+                st.subheader("Key Observations")
+
+                top_numeric = num_summary["Difference (Breach − Non-breach)"].abs().sort_values(ascending=False)
+
+                st.markdown("**Numerical variables most associated with breaches:**")
+                for var in top_numeric.head(3).index:
+                    st.write(f"• {var}")
+
+                st.markdown(
+                    "Higher values of these variables are consistently observed in breach cases, "
+                    "suggesting increased workload and patient complexity as primary drivers."
+                )
+
+            st.markdown("---")
 
             if "HRG" in sample.columns:
                 st.subheader("HRG Category Distribution")
