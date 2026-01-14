@@ -344,79 +344,143 @@ else:
             
             if 'task2' in st.session_state.schedule_results:
                 res, dev = st.session_state.schedule_results['task2']
-                col1 = st.columns(1)
-                with col1:
-                    st.metric("Workload Deviation", f"{dev:.2f}")
-                
-                
+                st.metric("Workload Deviation", f"{dev:.2f}")
                 st.markdown("---")
+
                 st.subheader("Complete Schedule")
+
                 st.dataframe(res, use_container_width=True, height=400)
-                
+
+               
+
                 st.markdown("---")
+
                 st.subheader("View Individual Operator Schedule")
-                
+
+               
+
                 if res.index.name or not isinstance(res.index, pd.RangeIndex):
+
                     operators = sorted(res.index.tolist())
-                    
+
+                   
+
                     selected_operator = st.selectbox(
+
                         "Select Operator to View Schedule",
+
                         options=operators,
+
                         key="task2_operator_select"
+
                     )
-                    
+
+                   
+
                     if selected_operator:
+
                         with st.spinner(f"Loading schedule for {selected_operator}..."):
+
                             time.sleep(0.2)
+
                             operator_schedule = res.loc[[selected_operator]].copy()
+
                             st.write(f"**Schedule for {selected_operator}**")
+
                             st.dataframe(operator_schedule, use_container_width=True, height=150)
-                            
+
+                           
+
                             days = [col for col in res.columns if col != 'Weekly hours']
+
                             if days:
+
                                 hours_data = operator_schedule[days].values.flatten()
+
                                 fig_bar = go.Figure(data=[
+
                                     go.Bar(x=days, y=hours_data, marker_color='#0045ac')
+
                                 ])
+
                                 fig_bar.update_layout(
+
                                     title=f"{selected_operator} - Daily Hours",
+
                                     xaxis_title="Day",
+
                                     yaxis_title="Hours",
+
                                     template="plotly_white",
+
                                     height=400
+
                                 )
+
                                 st.plotly_chart(fig_bar, use_container_width=True)
-                
+
+               
+
                 elif 'Operator' in res.columns:
+
                     operators = sorted(res['Operator'].unique())
+
                     selected_operator = st.selectbox(
+
                         "Select Operator to View Schedule",
+
                         options=operators,
+
                         key="task2_operator_select"
+
                     )
-                    
+
+                   
+
                     if selected_operator:
+
                         with st.spinner(f"Loading schedule for {selected_operator}..."):
+
                             time.sleep(0.2)
+
                             operator_schedule = res[res['Operator'] == selected_operator].copy()
+
                             st.write(f"**Schedule for {selected_operator}**")
+
                             st.dataframe(operator_schedule, use_container_width=True, height=300)
+
                 else:
+
                     st.info("Unable to identify operator format in results.")
-        
+
+       
+
         with tab3:
+
             st.subheader("Task 3: Skill-Based Assignment")
+
             if st.button("Run Skill Optimization", key="run_task3"):
+
                 with st.spinner("Optimizing skill matching... This may take a moment."):
+
                     res, cost = solve_task3()
+
                     time.sleep(0.5)
+
                     st.session_state.schedule_results['task3'] = (res, cost)
+
                     log_action("SCHEDULE_OPTIMIZATION", f"Task 3 - Cost: £{cost:,.2f}")
+
                     st.success("✓ Optimization complete!")
+
                     st.rerun()
-            
+
+           
+
             if 'task3' in st.session_state.schedule_results:
+
                 res, cost = st.session_state.schedule_results['task3']
+
                 st.metric("Total Cost", f"£{cost:,.2f}")
                 
                 st.markdown("---")
