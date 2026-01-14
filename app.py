@@ -21,22 +21,37 @@ import time
 # 1. Logging Setup
 # -------------------------------
 def setup_logging():
-    """Initialize logging system for audit trail"""
     log_dir = "logs"
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-    
-    log_file = os.path.join(log_dir, f"system_log_{datetime.now().strftime('%Y%m%d')}.log")
-    
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler(log_file),
-            logging.StreamHandler()
-        ]
+    os.makedirs(log_dir, exist_ok=True)
+
+    log_file = os.path.join(
+        log_dir,
+        f"system_log_{datetime.now().strftime('%Y%m%d')}.log"
     )
-    return logging.getLogger(__name__)
+
+    logger = logging.getLogger("staffsync")
+    logger.setLevel(logging.INFO)
+    if logger.hasHandlers():
+        logger.handlers.clear()
+
+    file_handler = logging.FileHandler(log_file)
+    stream_handler = logging.StreamHandler()
+
+    formatter = logging.Formatter(
+        "%(asctime)s | %(levelname)s | %(message)s"
+    )
+
+    file_handler.setFormatter(formatter)
+    stream_handler.setFormatter(formatter)
+
+    logger.addHandler(file_handler)
+    logger.addHandler(stream_handler)
+
+    # Prevent double logging
+    logger.propagate = False
+
+    return logger
+
 
 logger = setup_logging()
 
