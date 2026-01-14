@@ -47,7 +47,6 @@ def setup_logging():
     logger.addHandler(file_handler)
     logger.addHandler(stream_handler)
 
-    # Prevent double logging
     logger.propagate = False
 
     return logger
