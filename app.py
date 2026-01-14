@@ -344,11 +344,9 @@ else:
             
             if 'task2' in st.session_state.schedule_results:
                 res, dev = st.session_state.schedule_results['task2']
-                col1, col2 = st.columns(2)
+                col1= st.columns(1)
                 with col1:
                     st.metric("Workload Deviation", f"{dev:.2f}")
-                with col2:
-                    st.metric("Total Cost", f"£{cost:,.2f}")
                 
                 st.markdown("---")
                 st.subheader("Complete Schedule")
