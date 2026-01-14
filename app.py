@@ -977,7 +977,6 @@ else:
                 if st.button("Predict Breach", use_container_width=True, type="primary"):
                     try:
                         # Create input dataframe with ONLY the features used in training
-                        # Match exactly what the model was trained on
                         input_data = pd.DataFrame({
                             "Age": [age],
                             "Period": [period],
@@ -990,7 +989,7 @@ else:
                         })
                         
                         # The model is a Pipeline with preprocessing built-in
-                        # Just pass the dataframe directly
+                        # Pass the dataframe directly
                         prediction_proba = st.session_state.model.predict_proba(input_data)[0]
                         prediction = st.session_state.model.predict(input_data)[0]
                         
@@ -1035,7 +1034,7 @@ else:
                         st.info("Please ensure all input features match the model's training data")
 
     # =====================================================
-    # PAGE 6: DATA MANAGEMENT (Enhanced)
+    # PAGE 6: DATA MANAGEMENT
     # =====================================================
     elif page == "Data Management":
         st.title("Advanced Data Management")
@@ -1054,7 +1053,7 @@ else:
         with tab2:
             st.subheader("Range-Based Data Operations")
             
-            # Operation Panel at the top
+            # Operation Panel 
             st.markdown("#### Step 1: Define Range Filter")
             
             # Select variable
@@ -1092,7 +1091,7 @@ else:
                 st.markdown("---")
 
                 st.markdown("#### Step 2: Select Records to Modify")
-                st.caption("👇 Scroll down to view and select records from the filtered results below")
+                st.caption("Scroll down to view and select records from the filtered results below")
                 
                 # Show filtered records with checkboxes
                 if len(range_filtered) > 0:
