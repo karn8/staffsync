@@ -344,9 +344,10 @@ else:
             
             if 'task2' in st.session_state.schedule_results:
                 res, dev = st.session_state.schedule_results['task2']
-                col1= st.columns(1)
+                col1 = st.columns(1)
                 with col1:
                     st.metric("Workload Deviation", f"{dev:.2f}")
+                
                 
                 st.markdown("---")
                 st.subheader("Complete Schedule")
@@ -1099,6 +1100,8 @@ else:
                         st.session_state.selected_records = range_filtered.index.tolist()
                     else:
                         st.session_state.selected_records = []
+                    
+                    # Individual selection
                     st.write("**Or select individual records:**")
                     selected_indices = st.multiselect(
                         "Choose records by ID",
