@@ -11,10 +11,6 @@ html, body {
     color: #1f2933;
 }
 
-/*#MainMenu, footer, header { 
-    visibility: hidden; 
-}*/
-
 [data-testid="stAppViewContainer"] {
     background-color: #f4f6f8;
 }
