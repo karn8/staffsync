@@ -40,6 +40,7 @@ def solve_task1():
     return schedule, cost
 
 
+# Task 2: Fair Workload Distribution
 def solve_task2():
 
     total_required = DAILY_REQUIRED * len(DAYS)
