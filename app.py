@@ -335,9 +335,9 @@ else:
             st.subheader("Task 2: Workload Fairness")
             if st.button("Run Fairness Optimization", key="run_task2"):
                 with st.spinner("Optimizing for fairness... This may take a moment."):
-                    res, dev = solve_task2()
+                    res, dev, cost = solve_task2()
                     time.sleep(0.5)
-                    st.session_state.schedule_results['task2'] = (res, dev)
+                    st.session_state.schedule_results['task2'] = (res, dev, cost)
                     log_action("SCHEDULE_OPTIMIZATION", f"Task 2 - Deviation: {dev:.2f}")
                     st.success("✓ Optimization complete!")
                     st.rerun()
@@ -345,6 +345,7 @@ else:
             if 'task2' in st.session_state.schedule_results:
                 res, dev = st.session_state.schedule_results['task2']
                 st.metric("Workload Deviation", f"{dev:.2f}")
+                st.metric("Total Cost", f"£{cost:,.2f}")
 
                 st.markdown("---")
                 st.subheader("Complete Schedule")

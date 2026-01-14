@@ -46,6 +46,7 @@ def solve_task2():
 
     model = pulp.LpProblem("Task2_Fairness", pulp.LpMinimize)
 
+    # Variables
     x = pulp.LpVariable.dicts(
         "hours",
         ((op, d) for op in OPERATORS for d in DAYS),
@@ -55,8 +56,10 @@ def solve_task2():
     H = {op: pulp.lpSum(x[(op, d)] for d in DAYS) for op in OPERATORS}
     D = pulp.LpVariable("MaxDeviation", lowBound=0)
 
+    # Objective: Minimize the maximum deviation from the average
     model += D
 
+    # Constraints
     for op in OPERATORS:
         for d in DAYS:
             model += x[(op, d)] <= AVAILABILITY[op][d]
@@ -66,11 +69,13 @@ def solve_task2():
 
     for op in OPERATORS:
         model += H[op] >= MIN_WEEK[op]
+        # Fairness constraints: |H_op - average| <= D
         model += H[op] - avg_hours <= D
         model += avg_hours - H[op] <= D
 
     model.solve(pulp.PULP_CBC_CMD(msg=False))
 
+    # Calculate results
     schedule = pd.DataFrame(index=OPERATORS, columns=DAYS)
     for op in OPERATORS:
         for d in DAYS:
@@ -78,7 +83,11 @@ def solve_task2():
 
     schedule["Weekly hours"] = schedule.sum(axis=1)
 
-    return schedule, D.value()
+    # Calculate Total Cost
+    total_cost = sum(WAGES[op] * x[(op, d)].value() 
+                     for op in OPERATORS for d in DAYS)
+
+    return schedule, D.value(), total_cost
 
 # Task 3: Skill-Based Scheduling
 def solve_task3():
