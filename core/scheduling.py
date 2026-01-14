@@ -4,6 +4,7 @@ import pulp
 import pandas as pd
 from core.data import *
 
+# Task 1: Minimize Cost (LP)
 def solve_task1():
     model = pulp.LpProblem("Task1_Cost_Min", pulp.LpMinimize)
 
@@ -38,7 +39,7 @@ def solve_task1():
 
     return schedule, cost
 
-
+# Task 2: Fairness in Scheduling (Minimize Max Deviation)
 def solve_task2():
     total_required = DAILY_REQUIRED * len(DAYS)
     avg_hours = total_required / len(OPERATORS)
@@ -79,7 +80,7 @@ def solve_task2():
 
     return schedule, D.value()
 
-
+# Task 3: Skill-Based Scheduling
 def solve_task3():
     model = pulp.LpProblem("Task3_Skills", pulp.LpMinimize)
 

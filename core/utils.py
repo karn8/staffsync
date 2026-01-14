@@ -1,3 +1,4 @@
+# core/utils.py
 def get_operator_hours(schedule, operator):
     return schedule.loc[operator, "Weekly hours"]
 

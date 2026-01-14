@@ -49,7 +49,7 @@ def task4_visualisations(sample: pd.DataFrame):
 
     sns.set(style="whitegrid")
 
-    # ---- FIGURE 1: Numeric Distributions
+    # FIGURE 1: Numeric Distributions
     fig, axes = plt.subplots(2, 3, figsize=(15, 8))
     axes = axes.flatten()
 
@@ -68,7 +68,7 @@ def task4_visualisations(sample: pd.DataFrame):
     plt.tight_layout()
     plt.show()
 
-    # ---- FIGURE 2: Categorical Distributions
+    # FIGURE 2: Categorical Distributions
     fig, axes = plt.subplots(1, 3, figsize=(15, 4))
 
     categorical_cols = ["DayofWeek", "Breachornot", "HRG"]
@@ -81,7 +81,7 @@ def task4_visualisations(sample: pd.DataFrame):
     plt.tight_layout()
     plt.show()
 
-    # ---- FIGURE 3: Relationships
+    # FIGURE 3: Relationships
     fig, axes = plt.subplots(1, 3, figsize=(18, 5))
 
     sns.boxplot(
@@ -126,7 +126,7 @@ def task5_confidence_intervals(sample: pd.DataFrame):
     los = sample["LoS"]
     n = len(los)
 
-    # ---- CI for mean LoS
+    # CI for mean LoS
     mean_los = los.mean()
     std_los = los.std(ddof=1)
 
@@ -134,7 +134,7 @@ def task5_confidence_intervals(sample: pd.DataFrame):
     margin_los = t_crit * std_los / np.sqrt(n)
     ci_los = (mean_los - margin_los, mean_los + margin_los)
 
-    # ---- CI for breach rate
+    # CI for breach rate
     breach = sample["Breachornot"].map({"breach": 1, "non-breach": 0})
     p_hat = breach.mean()
 
@@ -149,33 +149,3 @@ def task5_confidence_intervals(sample: pd.DataFrame):
         "ci_breach_rate": ci_breach
     }
 
-
-def task5_hypothesis_test(sample: pd.DataFrame):
-    """
-    Performs hypothesis test and effect size calculation
-    """
-
-    los_breach = sample[sample["Breachornot"] == "breach"]["LoS"]
-    los_nonbreach = sample[sample["Breachornot"] == "non-breach"]["LoS"]
-
-    t_stat, p_two = stats.ttest_ind(
-        los_breach,
-        los_nonbreach,
-        equal_var=False
-    )
-
-    p_one = p_two / 2
-
-    pooled_sd = np.sqrt(
-        (los_breach.var(ddof=1) + los_nonbreach.var(ddof=1)) / 2
-    )
-
-    cohen_d = (los_breach.mean() - los_nonbreach.mean()) / pooled_sd
-
-    return {
-        "mean_los_breach": los_breach.mean(),
-        "mean_los_nonbreach": los_nonbreach.mean(),
-        "t_statistic": t_stat,
-        "one_sided_p_value": p_one,
-        "cohens_d": cohen_d
-    }

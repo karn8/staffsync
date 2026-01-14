@@ -1,3 +1,4 @@
+#imports
 from matplotlib import pyplot as plt
 import streamlit as st
 import pandas as pd
@@ -182,7 +183,7 @@ else:
         st.title("A&E Operations")
         st.markdown("---")
         
-        # Add loading indicator for page changes
+        # Loading indicator 
         previous_page = st.session_state.get('current_page', None)
         page = st.radio(
             "Navigation Menu",
@@ -190,7 +191,6 @@ else:
             key="navigation_radio"
         )
         
-        # Show loading when page changes
         if previous_page and previous_page != page:
             with st.spinner(f"Loading {page}..."):
                 time.sleep(0.3)
@@ -248,14 +248,13 @@ else:
             fig.update_layout(height=600, font_family="Inter", showlegend=False)
             st.plotly_chart(fig, use_container_width=True)
 
-    # =====================================================
-    # PAGE 2: SCHEDULING (Enhanced with Operator View)
-    # =====================================================
+    # ==================
+    # PAGE 2: SCHEDULING 
+    # ==================
     elif page == "Scheduling":
         st.title("Operator Schedule Optimization")
         log_action("PAGE_VIEW", "Scheduling")
         
-        # Tab change loading indicator
         selected_tab = st.session_state.get('scheduling_tab', 0)
         
         tab1, tab2, tab3 = st.tabs(["Cost Optimization", "Fairness", "Skill Matching"])
@@ -344,8 +343,12 @@ else:
                     st.rerun()
             
             if 'task2' in st.session_state.schedule_results:
-                res, dev = st.session_state.schedule_results['task2']
-                st.metric("Workload Deviation", f"{dev:.2f}")
+                res, dev, cost = st.session_state.schedule_results['task2']
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("Workload Deviation", f"{dev:.2f}")
+                with col2:
+                    st.metric("Total Cost", f"£{cost:,.2f}")
                 
                 st.markdown("---")
                 st.subheader("Complete Schedule")
@@ -472,16 +475,16 @@ else:
                 else:
                     st.info("Unable to identify operator format in results.")
 
-    # =====================================================
+    # ==================
     # PAGE 3: ANALYTICS
-    # =====================================================
+    # ==================
     elif page == "Clinical Analytics":
         st.title("Clinical Analytics")
         log_action("PAGE_VIEW", "Analytics")
 
-        # =====================================================
+        # =====================================
         # DESCRIPTIVE ANALYSIS — CLINICAL DATA
-        # =====================================================
+        # =====================================
         st.subheader("Descriptive Analysis")
 
         numeric_vars = df.select_dtypes(include=[np.number]).columns.tolist()
@@ -492,9 +495,9 @@ else:
         c2.metric("Numeric Variables", len(numeric_vars))
         c3.metric("Categorical Variables", len(categorical_vars))
 
-        # -------------------------------------------------
+        # ---------------
         # Breach Summary
-        # -------------------------------------------------
+        # ---------------
         if "Breachornot" in df.columns:
             breach_count = (df["Breachornot"] == "breach").sum()
             breach_percent = (breach_count / len(df)) * 100
@@ -547,9 +550,9 @@ else:
             fig_scatter.update_layout(height=750, font_family="Inter")
             st.plotly_chart(fig_scatter, use_container_width=True)
 
-    # =====================================================
+    # =================
     # PAGE 4: SAMPLING
-    # =====================================================
+    # =================
     elif page == "Sampling":
         st.title("Random Sampling & Statistical Inference")
         log_action("PAGE_VIEW", "Sampling")
@@ -749,7 +752,6 @@ else:
                     }),
                     use_container_width=True
                 )
-
 
                 st.subheader("Distribution Comparison")
 
@@ -989,7 +991,6 @@ else:
                         })
                         
                         # The model is a Pipeline with preprocessing built-in
-                        # Pass the dataframe directly
                         prediction_proba = st.session_state.model.predict_proba(input_data)[0]
                         prediction = st.session_state.model.predict(input_data)[0]
                         
@@ -1056,7 +1057,6 @@ else:
             # Operation Panel 
             st.markdown("#### Step 1: Define Range Filter")
             
-            # Select variable
             numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
             selected_var = st.selectbox("Select Variable", numeric_cols)
             
@@ -1075,7 +1075,7 @@ else:
                         step=1.0
                     )
                 
-                # Filter data in range
+                # Filter data 
                 range_filtered = df[
                     (df[selected_var] >= min_val) & 
                     (df[selected_var] <= max_val)
@@ -1095,15 +1095,12 @@ else:
                 
                 # Show filtered records with checkboxes
                 if len(range_filtered) > 0:
-                    # Select all option
                     select_all = st.checkbox("Select All Records", value=False)
                     
                     if select_all:
                         st.session_state.selected_records = range_filtered.index.tolist()
                     else:
                         st.session_state.selected_records = []
-                    
-                    # Individual selection
                     st.write("**Or select individual records:**")
                     selected_indices = st.multiselect(
                         "Choose records by ID",

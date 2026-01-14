@@ -145,7 +145,7 @@ streamlit run app.py
 
 ##  Data
 
-The repository includes a sample dataset (`AED4weeks.csv`) representing four weeks of A&E activity. Users may also upload their own datasets, provided the schema matches the expected format.
+The repository includes a sample dataset (`data/AED4weeks.csv`) representing four weeks of A&E activity. Users may also upload their own datasets, provided the schema matches the expected format. Refer AED4weeks.csv to view the schema.
 
 **Note:** This system is intended for academic and analytical purposes. It is not intended for direct clinical deployment without appropriate validation and governance.
 

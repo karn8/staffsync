@@ -1,5 +1,7 @@
+# core/data_manager.py
 import pandas as pd
 
+# DataManager class to handle patient data
 class DataManager:
     def __init__(self, path):
         self.df = pd.read_csv(path)
