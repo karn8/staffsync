@@ -343,7 +343,7 @@ else:
                     st.rerun()
             
             if 'task2' in st.session_state.schedule_results:
-                res, dev = st.session_state.schedule_results['task2']
+                res, dev, cost = st.session_state.schedule_results['task2']
                 st.metric("Workload Deviation", f"{dev:.2f}")
                 st.metric("Total Cost", f"£{cost:,.2f}")
 
