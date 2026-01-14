@@ -8,6 +8,14 @@ The application is intended for academic, analytical, and operational use, with 
 
 ---
 
+## BMAN73701 Assessment solution
+- task 1 (core\scheduling.py - solve_task1())
+- task 2 (core\scheduling.py - solve_task2())
+- task 3 (core\scheduling.py - solve_task3())
+- task 4 (core\sampling.py)
+- task 5 (core\sampling.py)
+- task 6 (\model.py)
+
 ##  Project Objectives
 
 The primary objectives of StaffSync are to:
